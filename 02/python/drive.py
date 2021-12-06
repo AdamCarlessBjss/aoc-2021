@@ -13,12 +13,13 @@ def follow_nav_directions(directions):
     v = 0
 
     for i in directions:
-        if i[0] == "up":
-            v -= int(i[1])
-        if i[0] == "down":
-            v += int(i[1])
-        if i[0] == "forward":
-            h += int(i[1])
+        match i[0]:
+            case "up":
+                v -= int(i[1])
+            case "down":
+                v += int(i[1])
+            case "forward":
+                h += int(i[1])
 
     return h, v
 
@@ -29,13 +30,14 @@ def follow_aim_directions(directions):
     aim = 0
 
     for i in directions:
-        if i[0] == "up":
-            aim -= int(i[1])
-        if i[0] == "down":
-            aim += int(i[1])
-        if i[0] == "forward":
-            h += int(i[1])
-            v += aim * int(i[1])
+        match i[0]:
+            case "up":
+                aim -= int(i[1])
+            case "down":
+                aim += int(i[1])
+            case "forward":
+                h += int(i[1])
+                v += aim * int(i[1])
 
     return h, v
 
@@ -45,4 +47,4 @@ final_position = follow_nav_directions(directions)
 print(f'final position multiple: {final_position[0] * final_position[1]}')
 
 final_position = follow_aim_directions(directions)
-print(f'final position multiple: {final_position[0] * final_position[1]}')
+print(f'final aimed position multiple: {final_position[0] * final_position[1]}')
