@@ -9,16 +9,29 @@ import (
 const board_size = 10
 const win = 21
 
+// count of 3 dice throw combinations which lead to each possible score
 var dieScoreCombinations map[int]int = map[int]int{3: 1, 4: 3, 5: 6, 6: 7, 7: 6, 8: 3, 9: 1}
 
-type game_state struct {
+// helper for 1-based modulo increments
+func mod1(val int, mod int) int { return (val - 1) % mod + 1 }
+
+// helper to read cmdline args into ints
+func read(argIndex int) int {
+	p1, err := strconv.Atoi(os.Args[argIndex])
+	if err != nil { panic(err) }
+	return p1
+}
+
+type GameState struct {
 	p1Pos int
 	p2Pos int
 	p1Score int
 	p2Score int
 }
 
-func playAllStates(state game_state) []int {
+// recurse thru all possible game states from the given state
+// counting the wins multiplied by the number of ways to get that win
+func playAllStates(state GameState) []int {
 	// if someone won, we're done with this reality
 	if state.p1Score >= win { return []int{1, 0} }
 	if state.p2Score >= win { return []int{0, 1} }
@@ -32,7 +45,7 @@ func playAllStates(state game_state) []int {
 		newScore := state.p1Score + newPos
 
 		// play the rest of the rolls, alternating the current player
-		newState := game_state{state.p2Pos, newPos, state.p2Score, newScore}
+		newState := GameState{state.p2Pos, newPos, state.p2Score, newScore}
 		wins := playAllStates(newState)
 
 		// count the number of wins so far
@@ -43,18 +56,12 @@ func playAllStates(state game_state) []int {
 	return results
 }
 
-func mod1(val int, mod int) int {
-	return (val - 1) % mod + 1
-}
-
 func main() {
-	p1, err := strconv.Atoi(os.Args[1])
-	p2, err := strconv.Atoi(os.Args[2])
-	if err != nil { panic(err) }
+	p1, p2 := read(1), read(2)
 	fmt.Println("Player 1 starts at: ", p1)
 	fmt.Println("Player 2 starts at: ", p2)
 
-	stateZero := game_state{p1, p2, 0, 0}
+	stateZero := GameState{p1, p2, 0, 0}
 	wins := playAllStates(stateZero)
 
 	fmt.Println("wins: ", wins[0], wins[1])
