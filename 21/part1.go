@@ -1,65 +1,71 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "strconv"
-    "math"
+	"fmt"
+	"os"
+	"strconv"
 )
 
 const board_size = 10
 const die_size = 100
-const die_count = 3
-const win_score = 1000
+const win = 1000
 
-type player struct {
-    start int
-    current int
-    score int
+// helper for 1-based modulo increments
+func mod1(val int, mod int) int { return (val - 1) % mod + 1 }
+
+// helper to read cmdline args into ints
+func read(argIndex int) int {
+	p1, err := strconv.Atoi(os.Args[argIndex])
+	if err != nil { panic(err) }
+	return p1
 }
 
-type game_dice struct {
-    d1 int
-    d2 int
-    d3 int
+// Player "object"
+type Player struct {
+	current int
+	score int
 }
 
-func mod1(start int, inc int, mod int) int {
-    return (start+inc-1)%mod + 1
+func (this *Player) move(steps int) {
+	this.current = mod1(this.current + steps, board_size)
+	this.score += this.current
 }
 
-func move(p *player, d *game_dice) int{
-    p.current = mod1(p.current, (d.d1 + d.d2 + d.d3), board_size)
-    p.score += p.current
-	return p.score
+func (this *Player) wins() bool { return this.score >= win }
+
+// Dice "object"
+type GameDice struct {
+	last_roll int
+	roll_count int
 }
 
-func roll(d *game_dice, die_count int, game_count *int ) {
-    d.d1 = mod1(d.d1, die_count, die_size)
-    d.d2 = mod1(d.d2, die_count, die_size)
-    d.d3 = mod1(d.d3, die_count, die_size)
-	*game_count += die_count
+func (this *GameDice) roll_once() int {
+	this.roll_count++
+	this.last_roll = mod1(this.last_roll + 1, die_size)
+	return this.last_roll
+}
+
+func (this *GameDice) roll() int {
+	return this.roll_once() + this.roll_once() + this.roll_once()
+}
+
+// play the game, return the loser
+func play(p1, p2 *Player, dice *GameDice) *Player {
+	for ;; {
+		p1.move(dice.roll())
+		if (p1.wins()) { return p2 }
+		p2.move(dice.roll())
+		if (p2.wins()) { return p1 }
+	}
+	panic("infinite loop has ended")
 }
 
 func main() {
-    p1, err := strconv.Atoi(os.Args[1])
-    p2, err := strconv.Atoi(os.Args[2])
-    if err != nil { panic(err) }
+	player1, player2 := &Player{read(1), 0}, &Player{read(2), 0}
+	dice := &GameDice{0, 0}
+	loser := play(player1, player2, dice)
 
-    player1 := &player{p1, p1, 0}
-    player2 := &player{p2, p2, 0}
-    dice := &game_dice{-2, -1, 0}
-    roll_count := 0
-
-	for ;; {
-        roll(dice, die_count, &roll_count)
-        if (move(player1, dice) >= win_score) { break }
-
-        roll(dice, die_count, &roll_count)
-		if (move(player2, dice) >= win_score) { break }
-    }
-	
-    fmt.Println("dice stats: ", dice.d1, dice.d2, dice.d3, roll_count)
-    fmt.Println("player scores: ", player1.score, player2.score)
-    fmt.Printf("result: %.0f\n", float64(roll_count) * math.Min(float64(player1.score), float64(player2.score)))
+	fmt.Println("dice stats:", dice.last_roll, dice.roll_count)
+	fmt.Println("player scores:", player1.score, player2.score)
+	fmt.Printf("result: %.0f\n", float64(dice.roll_count) * float64(loser.score))
 }
