@@ -69,7 +69,7 @@ def play_bingo(boards, draws):
         for i, draw in enumerate(draws):
             if board.dib(draw):
                 score = sum(board.unmarked()) * draw
-                results[i] = score
+                results[score] = board
                 print(f'House! On draw {i} ({draw}), with score {score}, unmarked entries are: {board.unmarked()}')
 #                boards.remove(board)
                 break
@@ -79,5 +79,5 @@ draws = parse_draws("draws.txt")
 boards = parse_boards("boards.txt")
 
 results = play_bingo(boards, draws)
-print({results})
+print(results)
 
